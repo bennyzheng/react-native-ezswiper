@@ -5,6 +5,7 @@
  */
 
 import React, { Component } from 'react';
+import { Platform } from "react-native";
 import PropTypes from 'prop-types';
 import {
     View,
@@ -78,8 +79,8 @@ export default class EZSwiper extends Component<{}> {
             offset:offset,
         }
 
-        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)        
-        
+        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)
+
         const scaleArray = [];
         const translateArray = [];
         for (let i = 0; i < this.ezswiper.count + 2; i++) {
@@ -123,7 +124,7 @@ export default class EZSwiper extends Component<{}> {
             offset:offset,
         }
 
-        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)        
+        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)
 
         if (this.props.dataSource.length !== dataSource.length) {
             const scaleArray = [];
@@ -157,6 +158,12 @@ export default class EZSwiper extends Component<{}> {
     */
     scrollTo(index, animated = true) {
         this.scrollView && this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: this.ezswiper.side * index, animated: animated });
+
+        if (index === this.props.dataSource.length && Platform.OS === 'android') {
+            setTimeout(()=> {
+                this.scrollTo(this.scrollIndex + 1);
+            },this.ezswiper.autoplayTimeout * 1000);
+        }
     }
 
     /**
@@ -240,7 +247,8 @@ export default class EZSwiper extends Component<{}> {
             let offset = e.nativeEvent.contentOffset[this.ezswiper.scrollToDirection];
             if (this.ezswiper.loop) {
                 if (Math.abs(offset - ((this.ezswiper.count + 1) * this.ezswiper.side)) < 20.1) {
-                    offset = this.ezswiper.side
+                    offset = this.ezswiper.side;
+                    this.scrollView.scrollTo(); // 必须要先调取ScrollTo后再给值
                     this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: offset, animated: false });
                 } else if (Math.abs(offset) < 20.1) {
                     offset = this.ezswiper.side * this.ezswiper.count
